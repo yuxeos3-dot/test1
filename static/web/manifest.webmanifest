@@ -1,0 +1,18 @@
+{
+  "name": "抖阴",
+  "short_name": "抖阴",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000",
+  "theme_color": "#000",
+  "lang": "zh_cn",
+  "scope": "/",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/static/web/images/pwa_icon.png",
+      "sizes": "260x260",
+      "type": "image/png"
+    }
+  ]
+}

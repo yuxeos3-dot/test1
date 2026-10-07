@@ -1,0 +1,202 @@
+/*
+ * 列表页页尾：切页 / 跳页改版
+ * 设计稿：figma llJD26NkpUDM3AF0k8k10F 节点 1047-308「页码设计08-21」
+ *   1040-2733 未输入态 / 1040-2787 输入态 / 1040-1950 第5页起常规形态 / 1040-2091 倒数第5页前
+ * 结构由 storage/static/web/js/pager_nav.js 生成，这里只负责视觉。
+ * 命名统一用 dxp- 前缀，避免与 zui.css、common.css 里既有的 .pager-* 规则冲突。
+ */
+
+/* 外层：横向 flex + 换行，配合 .dxp-row 的 flex-basis:100% 撑出「页码行 / 跳页行」两行，行距 8px。
+   刻意不用 flex-direction:column —— 一旦将来有人往 ul.pager 里服务端渲染别的 <li>（SEO 页码之类），
+   纵向 flex 会把它们竖成一长条；横向 + 换行则始终横排。覆盖 zui.css 的 .pager 与 common.css 的 .dx-pager。 */
+.dx-pager.dx-pager {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    row-gap: 8px;
+    column-gap: 8px;
+    margin: 12px 0;
+    padding-left: 0;
+    max-width: 100%;
+    min-width: 0;
+    overflow: visible;
+    white-space: normal;
+    list-style: none;
+}
+
+/* 页码行 / 跳页行各自独占一整行 */
+.dx-pager .dxp-row {
+    display: flex;
+    justify-content: center;
+    flex: 0 0 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+/* ---------- 页码行 ---------- */
+
+.dx-pager .dxp-pages {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    max-width: 100%;
+    /* 作为 flex 项要允许收缩，窄屏才会横向滚动而不是撑破容器 */
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.dx-pager .dxp-pages::-webkit-scrollbar {
+    display: none;
+}
+
+.dx-pager .dxp-page,
+.dx-pager .dxp-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    float: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background-color: transparent;
+    text-decoration: none;
+    line-height: 1.2;
+}
+
+.dx-pager .dxp-page {
+    font-size: 14px;
+    font-weight: 400;
+    color: #666;
+    border-radius: 4px;
+}
+
+.dx-pager .dxp-page:hover {
+    opacity: .8;
+}
+
+/* 省略号：加粗、不可点击 */
+.dx-pager .dxp-ellipsis,
+.dx-pager .dxp-ellipsis:hover {
+    font-weight: 700;
+    cursor: default;
+    pointer-events: none;
+    opacity: 1;
+}
+
+/* 当前页：主色加粗、不可再点击 */
+.dx-pager .dxp-current,
+.dx-pager .dxp-current:hover {
+    font-weight: 700;
+    color: var(--dx-primary-color);
+    border-radius: 12px;
+    cursor: default;
+    pointer-events: none;
+    opacity: 1;
+}
+
+/* 上一页 / 下一页箭头 */
+.dx-pager .dxp-arrow {
+    width: 16px;
+    height: 16px;
+    color: var(--dx-primary-color);
+}
+
+.dx-pager .dxp-arrow-next {
+    transform: rotate(180deg);
+}
+
+.dx-pager .dxp-arrow.dxp-disabled,
+.dx-pager .dxp-arrow.dxp-disabled:hover {
+    opacity: .5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.dx-pager .dxp-arrow-icon {
+    display: block;
+    width: 16px;
+    height: 16px;
+}
+
+/* ---------- 跳页行 ---------- */
+
+.dx-pager .dxp-goto {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: auto;
+}
+
+.dx-pager .dxp-goto .dxp-goto-label {
+    font-size: 14px;
+    line-height: 1.2;
+    color: #666;
+}
+
+/* 未输入态：半透明深底 + 极淡描边（暗色站点） */
+.dx-pager .dxp-goto .dxp-goto-input {
+    box-sizing: border-box;
+    width: 58px;
+    height: 24px;
+    margin: 0;
+    padding: 0 8px;
+    border: .5px solid rgba(81, 82, 89, .5);
+    border-radius: 100px;
+    background-color: rgba(35, 35, 35, .61);
+    color: #fff;
+    font-size: 14px;
+    line-height: 1.2;
+    text-align: center;
+    box-shadow: none;
+    outline: none;
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.dx-pager .dxp-goto .dxp-goto-input::-webkit-outer-spin-button,
+.dx-pager .dxp-goto .dxp-goto-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* 已输入：转主色底与主色描边（设计稿 1040-2787）。
+   注意这里刻意不带 :focus —— 外观只由「有没有值」决定。
+   若把 :focus 并进来会出两个错：点进输入框还没打字就变高亮；
+   清空内容后因光标仍在而退不回默认态（GO 退了、输入框不退）。 */
+.dx-pager .dxp-goto .dxp-goto-input.is-filled {
+    border-color: var(--dx-primary-color);
+    background-color: rgba(254, 44, 85, .5);
+}
+
+/* 键盘聚焦的可达性提示，用 outline 表达，不占用设计稿那两个状态 */
+.dx-pager .dxp-goto .dxp-goto-input:focus-visible {
+    outline: 2px solid var(--dx-primary-color);
+    outline-offset: 1px;
+}
+
+.dx-pager .dxp-goto .dxp-goto-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 2px 8px;
+    border: 0;
+    border-radius: 100px;
+    background-color: rgba(254, 44, 85, .5);
+    color: #fff;
+    font-size: 12px;
+    line-height: 1;
+}
+
+.dx-pager .dxp-goto .dxp-goto-btn.is-active {
+    background-color: var(--dx-primary-color);
+}
